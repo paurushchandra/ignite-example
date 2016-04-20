@@ -1,0 +1,109 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:util="http://www.springframework.org/schema/util"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util-4.0.xsd
+        ">
+
+    <bean id="ignite" class="org.apache.ignite.Ignition" factory-method="start" destroy-method="close">
+        <constructor-arg name="cfg" ref="igniteConfiguration"  />
+    </bean>
+
+    <bean id="igniteConfiguration" class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="cacheConfiguration">
+            <list>
+                <ref bean="tradeCacheConfig" />
+                <ref bean="indexedTradeCacheConfig"/>
+                <ref bean="indexedSecurityDetailCacheConfig" />
+            </list>
+        </property>
+    </bean>
+
+    <bean id="tradeCacheConfig" class="org.apache.ignite.configuration.CacheConfiguration">
+        <property name="name" value="tradeCache"  />
+        <property name="queryEntities">
+            <list>
+                <bean class="org.apache.ignite.cache.QueryEntity">
+                    <property name="keyType" value="java.lang.Integer"/>
+                    <property name="valueType" value="com.example.model.Trade"/>
+                    <property name="fields" ref="tradeFields" />
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+
+    <bean id="indexedTradeCacheConfig" class="org.apache.ignite.configuration.CacheConfiguration">
+        <property name="name" value="indexedTradeCache"  />
+
+        <property name="queryEntities">
+            <list>
+                <bean class="org.apache.ignite.cache.QueryEntity">
+                    <property name="keyType" value="java.lang.Integer"/>
+                    <property name="valueType" value="com.example.model.Trade"/>
+
+                    <property name="fields" ref="tradeFields" />
+
+                    <property name="indexes">
+                        <list>
+                            <bean class="org.apache.ignite.cache.QueryIndex">
+                                <constructor-arg value="sedol"/>
+                            </bean>
+                            <bean class="org.apache.ignite.cache.QueryIndex">
+                                <constructor-arg>
+                                    <list>
+                                        <value>strategy</value>
+                                        <value>side</value>
+                                    </list>
+                                </constructor-arg>
+                                <constructor-arg value="SORTED" />
+                            </bean>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <util:map id="tradeFields">
+        <entry key="sedol" value="java.lang.String"/>
+        <entry key="price" value="java.lang.Double"/>
+        <entry key="quantity" value="java.lang.Integer"/>
+        <entry key="amount" value="java.lang.Double"/>
+        <entry key="strategy" value="com.example.model.Strategy"/>
+        <entry key="side" value="com.example.model.Side"/>
+    </util:map>
+
+    <bean id="indexedSecurityDetailCacheConfig" class="org.apache.ignite.configuration.CacheConfiguration">
+        <property name="name" value="securityDetailCache"  />
+
+        <property name="queryEntities">
+            <list>
+                <bean class="org.apache.ignite.cache.QueryEntity">
+                    <property name="keyType" value="java.lang.Integer"/>
+                    <property name="valueType" value="com.example.model.SecurityDetail"/>
+
+                    <property name="fields" >
+                        <map>
+                            <entry key="sedol" value="java.lang.String" />
+                            <entry key="sector" value="com.example.model.Sector" />
+                        </map>
+                    </property>
+
+                    <property name="indexes">
+                        <list>
+                            <bean class="org.apache.ignite.cache.QueryIndex">
+                                <constructor-arg value="sedol"/>
+                            </bean>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+
+</beans>
